@@ -1,0 +1,22 @@
+{
+    "PC":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": false },
+    "FS":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "HS":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "GP":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": false },
+    "AU":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": false },
+    "GAU":  { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": false },
+    "GGAU": { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": false },
+    "1C":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "H1C":  { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "1C1R": { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "1C2R": { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "2C":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "2C1R": { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "H2C":  { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "3C":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "4C":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "5C":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "6C":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "7C":   { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  },
+    "8C+":  { "F>F": true,  "F>M": true,  "M>F": true,  "M>M": true  }
+  }

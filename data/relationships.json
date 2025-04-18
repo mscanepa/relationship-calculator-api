@@ -1,0 +1,162 @@
+[
+  {
+    "code": "PC",
+    "nombre": "Padre/Madre – Hijo/a",
+    "abreviado": "P/M – H",
+    "promedio_cm": 3487,
+    "min_cm": 2376,
+    "max_cm": 3720
+  },
+  {
+    "code": "FS",
+    "nombre": "Hermano/a completo",
+    "abreviado": "HS",
+    "promedio_cm": 2613,
+    "min_cm": 1613,
+    "max_cm": 3488
+  },
+  {
+    "code": "HS",
+    "nombre": "Medio hermano/a",
+    "abreviado": "MHS",
+    "promedio_cm": 1759,
+    "min_cm": 1160,
+    "max_cm": 2436
+  },
+  {
+    "code": "GP",
+    "nombre": "Abuelo/a – Nieto/a",
+    "abreviado": "GP",
+    "promedio_cm": 1754,
+    "min_cm": 984,
+    "max_cm": 2462
+  },
+  {
+    "code": "AU",
+    "nombre": "Tío/a – Sobrino/a",
+    "abreviado": "AU",
+    "promedio_cm": 1741,
+    "min_cm": 1201,
+    "max_cm": 2282
+  },
+  {
+    "code": "GAU",
+    "nombre": "Tío abuelo/a – Sobrino nieto/a",
+    "abreviado": "GAU",
+    "promedio_cm": 850,
+    "min_cm": 330,
+    "max_cm": 1467
+  },
+  {
+    "code": "GGAU",
+    "nombre": "Tío bisabuelo/a – Sobrino bisnieto/a",
+    "abreviado": "GGAU",
+    "promedio_cm": 420,
+    "min_cm": 186,
+    "max_cm": 713
+  },
+  {
+    "code": "1C",
+    "nombre": "Primo hermano",
+    "abreviado": "1C",
+    "promedio_cm": 866,
+    "min_cm": 396,
+    "max_cm": 1397
+  },
+  {
+    "code": "H1C",
+    "nombre": "Medio primo hermano",
+    "abreviado": "½1C",
+    "promedio_cm": 449,
+    "min_cm": 156,
+    "max_cm": 979
+  },
+  {
+    "code": "1C1R",
+    "nombre": "Primo hermano una vez removido",
+    "abreviado": "1C1R",
+    "promedio_cm": 433,
+    "min_cm": 102,
+    "max_cm": 980
+  },
+  {
+    "code": "1C2R",
+    "nombre": "Primo hermano dos veces removido",
+    "abreviado": "1C2R",
+    "promedio_cm": 221,
+    "min_cm": 33,
+    "max_cm": 471
+  },
+  {
+    "code": "2C",
+    "nombre": "Primo segundo",
+    "abreviado": "2C",
+    "promedio_cm": 229,
+    "min_cm": 41,
+    "max_cm": 592
+  },
+  {
+    "code": "2C1R",
+    "nombre": "Primo segundo una vez removido",
+    "abreviado": "2C1R",
+    "promedio_cm": 122,
+    "min_cm": 14,
+    "max_cm": 353
+  },
+  {
+    "code": "H2C",
+    "nombre": "Medio primo segundo",
+    "abreviado": "½2C",
+    "promedio_cm": 120,
+    "min_cm": 10,
+    "max_cm": 325
+  },
+  {
+    "code": "3C",
+    "nombre": "Primo tercero",
+    "abreviado": "3C",
+    "promedio_cm": 73,
+    "min_cm": 0,
+    "max_cm": 234
+  },
+  {
+    "code": "4C",
+    "nombre": "Primo cuarto",
+    "abreviado": "4C",
+    "promedio_cm": 35,
+    "min_cm": 0,
+    "max_cm": 139
+  },
+  {
+    "code": "5C",
+    "nombre": "Primo quinto",
+    "abreviado": "5C",
+    "promedio_cm": 25,
+    "min_cm": 0,
+    "max_cm": 117
+  },
+  {
+    "code": "6C",
+    "nombre": "Primo sexto",
+    "abreviado": "6C",
+    "promedio_cm": 14,
+    "min_cm": 0,
+    "max_cm": 57
+  },
+  {
+    "code": "7C",
+    "nombre": "Primo séptimo",
+    "abreviado": "7C",
+    "promedio_cm": 14,
+    "min_cm": 0,
+    "max_cm": 57
+  },
+  {
+    "code": "8C+",
+    "nombre": "Primo octavo o más distante",
+    "abreviado": "8C+",
+    "promedio_cm": 11,
+    "min_cm": 0,
+    "max_cm": 42
+  }
+]
