@@ -14,7 +14,7 @@ from collections import defaultdict
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
-from .app.config import settings
+from app.config import settings
 
 app = FastAPI(
     title="Family Calculator API",
@@ -391,3 +391,8 @@ async def get_openapi_endpoint():
         description=app.description,
         routes=app.routes,
     )
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.environ.get("PORT", 8000))  # Render asigna el puerto en $PORT
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
