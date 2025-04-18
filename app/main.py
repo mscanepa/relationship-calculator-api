@@ -18,6 +18,8 @@ from app.config import settings
 from app.logger import logger
 from app.exceptions import APIException, RateLimitError
 from app.routers import relationships, dna_analysis
+from fastapi.middleware.gzip import GZipMiddleware
+import os
 
 app = FastAPI(
     title="Genealogy DNA Analysis API",
@@ -33,13 +35,17 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS Middleware
+origins = settings.CORS_ORIGINS.split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# GZip compression
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Security Headers Middleware
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -252,6 +258,24 @@ def get_histogram(code: str, db: Session = Depends(get_db)):
     counts = [int(p.probability * 1000) for p in probabilities]  # Scale probabilities for visualization
     
     return HistogramResponse(bins=bins, counts=counts)
+
+# Health check endpoint
+@app.get("/health")
+@limiter.limit("5/minute")
+async def health_check():
+    return {"status": "healthy"}
+
+# Log startup
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Starting Relationship Calculator API")
+    logger.info(f"CORS origins: {origins}")
+    logger.info(f"Rate limit: {settings.RATE_LIMIT_PER_MINUTE} requests/minute")
+
+# Log shutdown
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Shutting down Relationship Calculator API")
 
 if __name__ == "__main__":
     import uvicorn

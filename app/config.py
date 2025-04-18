@@ -10,35 +10,42 @@ class Settings(BaseSettings):
     API_REDOC_URL: str = os.getenv("API_REDOC_URL", "/redoc")
     
     # Server Configuration
-    HOST: str = os.getenv("HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("PORT", "8001"))
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
     API_BASE_URL: str = os.getenv("API_BASE_URL", f"http://{HOST}:{PORT}")
     
     # CORS Configuration
-    CORS_ORIGINS: List[str] = os.getenv("CORS_ORIGINS", "http://localhost:8000,http://localhost:3000").split(",")
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
     
     # Database Configuration
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/family_calculator")
+    DATABASE_URL: str
     
     # Security
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+    SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # Rate Limiting
-    RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
+    RATE_LIMIT_PER_MINUTE: int = 60
     
     # Data Files
-    RELATIONSHIPS_FILE: str = os.getenv("RELATIONSHIPS_FILE", "data/relationships.json")
-    DISTRIBUTIONS_FILE: str = os.getenv("DISTRIBUTIONS_FILE", "data/distribuciones.json")
+    RELATIONSHIPS_FILE: str = "data/relationships.json"
+    DISTRIBUTIONS_FILE: str = "data/distributions.json"
     
     # Logging
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_FORMAT: str = os.getenv("LOG_FORMAT", "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    LOG_LEVEL: str = "INFO"
+    LOG_FILE: str = "app.log"
     
     # Environment
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     
     class Config:
+        env_file = ".env"
         case_sensitive = True
 
-settings = Settings() 
+# Create settings instance
+settings = Settings()
+
+# Get CORS origins as list
+def get_cors_origins() -> List[str]:
+    return settings.CORS_ORIGINS.split(",") 
