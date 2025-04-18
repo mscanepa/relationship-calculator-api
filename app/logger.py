@@ -17,11 +17,8 @@ def configure_logging() -> None:
         cache_logger_on_first_use=True,
     )
 
-    # Configure standard logging
-    logging.basicConfig(
-        level=settings.LOG_LEVEL,
-        format=settings.LOG_FORMAT,
-    )
+    # Set logging level
+    logging.getLogger().setLevel(settings.LOG_LEVEL)
 
 def get_logger(name: str) -> structlog.BoundLogger:
     """Get a structured logger instance."""

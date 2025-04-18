@@ -4,24 +4,24 @@ import os
 
 class Settings(BaseSettings):
     # API Configuration
-    API_V1_STR: str = os.getenv("API_V1_STR", "/api/v1")
-    PROJECT_NAME: str = os.getenv("PROJECT_NAME", "Family Calculator API")
-    API_DOCS_URL: str = os.getenv("API_DOCS_URL", "/docs")
-    API_REDOC_URL: str = os.getenv("API_REDOC_URL", "/redoc")
+    API_V1_STR: str = "/api/v1"
+    PROJECT_NAME: str = "Relationship Calculator API"
+    VERSION: str = "0.1.0"
+    DESCRIPTION: str = "API for calculating genetic relationships and shared DNA"
     
     # Server Configuration
-    HOST: str = "0.0.0.0"
+    HOST: str = "localhost"
     PORT: int = 8000
-    API_BASE_URL: str = os.getenv("API_BASE_URL", f"http://{HOST}:{PORT}")
+    API_BASE_URL: str = "http://localhost:8000"
     
     # CORS Configuration
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
     
     # Database Configuration
-    DATABASE_URL: str
+    DATABASE_URL: str = "sqlite:///./sql_app.db"
     
     # Security
-    SECRET_KEY: str
+    SECRET_KEY: str = "your-secret-key-here"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     LOG_FILE: str = "app.log"
     
     # Environment
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    ENVIRONMENT: str = "development"
     
     class Config:
         env_file = ".env"
@@ -48,4 +48,4 @@ settings = Settings()
 
 # Get CORS origins as list
 def get_cors_origins() -> List[str]:
-    return settings.CORS_ORIGINS.split(",") 
+    return settings.CORS_ORIGINS 

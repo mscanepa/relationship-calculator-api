@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Dict, Any
 from . import models, database
 from .database import get_db
 from pydantic import BaseModel, Field
@@ -20,13 +20,15 @@ from app.exceptions import APIException, RateLimitError
 from app.routers import relationships, dna_analysis
 from fastapi.middleware.gzip import GZipMiddleware
 import os
+import json
+from pathlib import Path
 
 app = FastAPI(
-    title="Genealogy DNA Analysis API",
-    description="API for analyzing DNA relationships and shared cM values",
-    version="1.0.0",
-    docs_url=None,  # Disable default docs
-    redoc_url=None,  # Disable default redoc
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description=settings.DESCRIPTION,
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 # Rate Limiter
@@ -35,10 +37,9 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS Middleware
-origins = settings.CORS_ORIGINS.split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -262,14 +263,14 @@ def get_histogram(code: str, db: Session = Depends(get_db)):
 # Health check endpoint
 @app.get("/health")
 @limiter.limit("5/minute")
-async def health_check():
+async def health_check(request: Request):
     return {"status": "healthy"}
 
 # Log startup
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting Relationship Calculator API")
-    logger.info(f"CORS origins: {origins}")
+    logger.info(f"CORS origins: {settings.CORS_ORIGINS}")
     logger.info(f"Rate limit: {settings.RATE_LIMIT_PER_MINUTE} requests/minute")
 
 # Log shutdown
