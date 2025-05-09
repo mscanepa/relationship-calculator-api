@@ -27,8 +27,8 @@ def init_db():
         for rel in relationships:
             db_relationship = Relationship(
                 code=rel["code"],
-                name=rel["name"],
-                description=rel.get("description", ""),
+                name=rel["nombre"],
+                description=rel.get("abreviado", ""),
                 min_cm=rel["min_cm"],
                 max_cm=rel["max_cm"],
                 promedio_cm=rel["promedio_cm"],
