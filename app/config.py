@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Optional
 import os
 
 class Settings(BaseSettings):
@@ -39,9 +39,15 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "development"
     
+    # OpenAI/OpenRouter Configuration
+    OPENAI_API_BASE: str = "https://openrouter.ai/api/v1"
+    OPENROUTER_API_KEY: str = ""
+    MODEL_NAME: Optional[str] = None
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "allow"  # Permitir campos extra
 
 # Create settings instance
 settings = Settings()
