@@ -39,26 +39,28 @@ request_counts = defaultdict(list)
 
 async def rate_limit_middleware(request: Request, call_next):
     # No aplicar rate limiting para el cliente de test
-    if str(request.client.host) == "testclient":
+    client_host = getattr(request.client, "host", None) if request.client else None
+    if str(client_host) == "testclient":
         response = await call_next(request)
         return response
         
-    client_ip = request.client.host
+    client_ip = client_host
     current_time = time.time()
     
     # Limpiar solicitudes antiguas
     request_counts[client_ip] = [t for t in request_counts[client_ip] 
-                               if current_time - t < 60]
+                               if current_time - t < 60] if client_ip else []
     
     # Verificar límite
-    if len(request_counts[client_ip]) >= RATE_LIMIT_PER_MINUTE:
+    if client_ip and len(request_counts[client_ip]) >= RATE_LIMIT_PER_MINUTE:
         return JSONResponse(
             status_code=429,
             content={"error": "Rate limit exceeded"}
         )
     
     # Registrar nueva solicitud
-    request_counts[client_ip].append(current_time)
+    if client_ip:
+        request_counts[client_ip].append(current_time)
     
     response = await call_next(request)
     return response
@@ -104,14 +106,14 @@ except FileNotFoundError as e:
 EndogamiaLevel = Literal["none", "light", "moderate", "high", "very_high"]
 
 class AnalysisRequest(BaseModel):
-    cm: float = Field(..., description="Centimorgans compartidos", ge=0, le=4000)
-    person1_age: Optional[int] = Field(None, description="Edad de la primera persona")
-    person2_age: Optional[int] = Field(None, description="Edad de la segunda persona")
+    cm: float = Field(..., description="Centimorgans compartidos", gt=0, le=4000)
+    person1_age: Optional[int] = Field(None, description="Edad de la primera persona", ge=0, le=120)
+    person2_age: Optional[int] = Field(None, description="Edad de la segunda persona", ge=0, le=120)
     generacion: Optional[str] = Field(None, description="Generación")
     sexo: Optional[str] = Field(None, description="Sexo")
     x_inheritance: Optional[Union[bool, str]] = Field(None, description="Herencia del cromosoma X")
-    segments: Optional[int] = Field(None, description="Número de segmentos")
-    largest_segment: Optional[float] = Field(None, description="Tamaño del segmento más grande")
+    segments: Optional[int] = Field(None, description="Número de segmentos", ge=0)
+    largest_segment: Optional[float] = Field(None, description="Tamaño del segmento más grande", gt=0)
     endogamia: Optional[EndogamiaLevel] = Field(None, description="Nivel de endogamia en la familia")
 
 def adjust_cm_for_endogamia(cm: float, endogamia: Optional[EndogamiaLevel], relationship_code: str) -> float:
@@ -196,88 +198,83 @@ def calculate_probability(rel, request):
     """
     Calcula la probabilidad ajustada basada en múltiples factores
     """
-    # Pesos actualizados según nuevas especificaciones
     WEIGHTS = {
-        'cm_distance': 0.30,     # 30% - Distancia al promedio de cM
-        'range_fit': 0.20,       # 20% - Qué tan dentro del rango está
-        'segments': 0.20,        # 20% - Número de segmentos
-        'largest_segment': 0.15, # 15% - Tamaño del segmento más grande
-        'x_match': 0.05,        # 5% - Coincidencia en cromosoma X
-        'age_match': 0.10       # 10% - Coincidencia de edad
+        'cm_distance': 0.30,
+        'range_fit': 0.20,
+        'segments': 0.20,
+        'largest_segment': 0.15,
+        'x_match': 0.05,
+        'age_match': 0.10
     }
-    
-    # Ajustar cM por endogamia según tipo de relación
     adjusted_cm = float(adjust_cm_for_endogamia(request.cm, request.endogamia, rel["code"]))
-    
     scores = {}
-    
-    # 1. Distancia al promedio de cM con nuevo sistema de suavizado y colchón
+    # 1. Distancia al promedio de cM
     avg_cm = float(rel["promedio_cm"])
     diferencia = abs(adjusted_cm - avg_cm) / avg_cm
-    
-    if diferencia <= 0.15:  # Colchón del 15%
+    if diferencia <= 0.15:
         scores['cm_distance'] = 1.0
     else:
-        scores['cm_distance'] = float(pow(1 - diferencia, 0.5))  # Suavizado con raíz cuadrada
-    
+        val = 1 - diferencia
+        scores['cm_distance'] = math.sqrt(val) if val > 0 else 0.0
     # 2. Qué tan dentro del rango está
     min_cm = float(rel["min_cm"])
     max_cm = float(rel["max_cm"])
-    
     if adjusted_cm < min_cm or adjusted_cm > max_cm:
-        scores['range_fit'] = 0
+        scores['range_fit'] = 0.0
     else:
         range_center = (min_cm + max_cm) / 2
         range_size = max_cm - min_cm
-        distance_to_center = abs(adjusted_cm - range_center)
-        scores['range_fit'] = float(1 - pow(distance_to_center / (range_size / 2), 0.7))
-    
+        if range_size == 0:
+            scores['range_fit'] = 1.0
+        else:
+            val = 1 - pow(abs(adjusted_cm - range_center) / (range_size / 2), 0.7)
+            scores['range_fit'] = val if val > 0 else 0.0
     # 3. Número de segmentos
     if request.segments is not None:
         segment_ranges = {
             "FS": (35, 45),
             "1C": (25, 35),
             "2C": (10, 20),
-            "3C": (3, 10),  # Ajustado para primos terceros
+            "3C": (3, 10),
             "4C": (2, 5)
         }
-        
         if rel["code"] in segment_ranges:
             min_seg, max_seg = segment_ranges[rel["code"]]
             if request.segments < min_seg:
-                scores['segments'] = float(pow(request.segments / min_seg, 0.7))
+                val = request.segments / min_seg
+                scores['segments'] = pow(val, 0.7) if val > 0 else 0.0
             elif request.segments > max_seg:
-                scores['segments'] = float(pow(max_seg / request.segments, 0.7))
+                val = max_seg / request.segments
+                scores['segments'] = pow(val, 0.7) if val > 0 else 0.0
             else:
                 scores['segments'] = 1.0
         else:
             scores['segments'] = 0.5
     else:
         scores['segments'] = 0.5
-    
     # 4. Tamaño del segmento más grande
     if request.largest_segment is not None:
         largest_segment_ranges = {
             "FS": (150, 250),
             "1C": (80, 150),
             "2C": (50, 100),
-            "3C": (15, 60),  # Ajustado para primos terceros
+            "3C": (15, 60),
             "4C": (10, 30)
         }
-        
         if rel["code"] in largest_segment_ranges:
             min_seg, max_seg = largest_segment_ranges[rel["code"]]
             if request.largest_segment < min_seg:
-                scores['largest_segment'] = float(pow(request.largest_segment / min_seg, 0.7))
+                val = request.largest_segment / min_seg
+                scores['largest_segment'] = pow(val, 0.7) if val > 0 else 0.0
             elif request.largest_segment > max_seg:
-                scores['largest_segment'] = float(pow(max_seg / request.largest_segment, 0.7))
+                val = max_seg / request.largest_segment
+                scores['largest_segment'] = pow(val, 0.7) if val > 0 else 0.0
             else:
                 scores['largest_segment'] = 1.0
         else:
             scores['largest_segment'] = 0.5
     else:
         scores['largest_segment'] = 0.5
-    
     # 5. Coincidencia en cromosoma X
     if request.x_inheritance is not None:
         x_inheritance_patterns = {
@@ -287,7 +284,6 @@ def calculate_probability(rel, request):
             "3C": None,
             "4C": None
         }
-        
         expected_x = x_inheritance_patterns.get(rel["code"])
         if expected_x is True and request.x_inheritance:
             scores['x_match'] = 1.0
@@ -299,18 +295,19 @@ def calculate_probability(rel, request):
             scores['x_match'] = 0.0
     else:
         scores['x_match'] = 0.5
-    
     # 6. Coincidencia de edad
     scores['age_match'] = float(calculate_age_probability(rel, request))
-    
     # Calcular probabilidad final ponderada
     final_score = sum(WEIGHTS[factor] * score for factor, score in scores.items())
-    
-    # Ajustar por generación si está disponible (nuevo ajuste de ±25%)
+    # Ajustar por generación si está disponible
     if request.generacion is not None and rel.get("generacion") is not None:
         generation_match = request.generacion == str(rel["generacion"])
         final_score = final_score * (1.25 if generation_match else 0.75)
-    
+    # Asegurar que el resultado es un float real entre 0 y 1
+    try:
+        final_score = float(final_score.real)
+    except Exception:
+        final_score = 0.0
     return float(max(0, min(1, final_score)))
 
 @app.get("/")
@@ -383,19 +380,21 @@ async def analyze_relationship(request: AnalysisRequest):
                 if prob > 0.1:  # Solo incluir relaciones con probabilidad > 10%
                     results.append({
                         "code": rel["code"],
-                        "name": rel["nombre"],
-                        "description": rel["abreviado"],
-                        "probability": float(prob),
-                        "avg_cm": float(rel["promedio_cm"]),
+                        "nombre": rel["nombre"],
+                        "abreviado": rel["abreviado"],
+                        "promedio_cm": float(rel["promedio_cm"]),
                         "min_cm": float(rel["min_cm"]),
-                        "max_cm": float(rel["max_cm"])
+                        "max_cm": float(rel["max_cm"]),
+                        "adjustedProb": float(prob),
+                        "xPlausible": None,  # Placeholder, update if logic exists
+                        "agePlausible": None  # Placeholder, update if logic exists
                     })
             except Exception as e:
                 logger.error(f"Error al calcular probabilidad para {rel['code']}: {str(e)}")
                 continue
         
         # Ordenar por probabilidad
-        results.sort(key=lambda x: x["probability"], reverse=True)
+        results.sort(key=lambda x: x["adjustedProb"], reverse=True)
         
         # Preparar el análisis detallado
         most_likely = results[0] if results else None
@@ -431,18 +430,18 @@ def generate_relationship_summary(request, most_likely, second_likely):
         summary.append(f"La diferencia de edad es de {age_diff} años.")
     
     # Relación más probable
-    summary.append(f"\nLa relación más probable es {most_likely['name']} ({most_likely['probability']*100:.1f}% de probabilidad).")
+    summary.append(f"\nLa relación más probable es {most_likely['nombre']} ({most_likely['adjustedProb']*100:.1f}% de probabilidad).")
     
     # Segunda relación más probable si existe y es significativa
-    if second_likely and second_likely["probability"] > 0.15:
-        summary.append(f"También es posible que sean {second_likely['name']} ({second_likely['probability']*100:.1f}% de probabilidad).")
+    if second_likely and second_likely["adjustedProb"] > 0.15:
+        summary.append(f"También es posible que sean {second_likely['nombre']} ({second_likely['adjustedProb']*100:.1f}% de probabilidad).")
         
         # Explicar por qué la segunda opción es menos probable
         if request.person1_age and request.person2_age:
             age_diff = abs(request.person1_age - request.person2_age)
-            if "bisabuelo" in second_likely['name'].lower() and age_diff < 40:
+            if "bisabuelo" in second_likely['nombre'].lower() and age_diff < 40:
                 summary.append("Esta relación es menos probable debido a la diferencia de edad relativamente pequeña para ser bisabuelo/a.")
-            elif "abuelo" in second_likely['name'].lower() and age_diff < 20:
+            elif "abuelo" in second_likely['nombre'].lower() and age_diff < 20:
                 summary.append("Esta relación es menos probable debido a la diferencia de edad relativamente pequeña para ser abuelo/a.")
     
     return " ".join(summary)
